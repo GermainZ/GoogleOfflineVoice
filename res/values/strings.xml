@@ -2,7 +2,7 @@
 
     <string name="app_name">GoogleOfflineVoice</string>
     <string name="pref_support_title">Support Thread</string>
-    <string name="pref_support_summary">A reboot is required to apply the settings.</string>
+    <string name="pref_support_summary">A reboot is NOT required to apply the settings.</string>
     <string name="pref_disabled_title">Disable module</string>
     <string name="pref_disabled_summary">Offline voice recognition will not be forced if this is checked.</string>
     <string name="pref_show_app_icon_title">Show launcher icon</string>

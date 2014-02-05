@@ -1,9 +1,5 @@
 package com.germainz.googleofflinevoice;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-
 import static de.robv.android.xposed.XposedBridge.hookAllConstructors;
 import static de.robv.android.xposed.XposedHelpers.findClass;
 import static de.robv.android.xposed.XposedHelpers.getObjectField;
@@ -38,7 +34,7 @@ public class OfflineVoice implements IXposedHookLoadPackage {
                 // connect. The user can then press "Resend audio" and it'll work, which is a hassle.
                 // I couldn't figure out how fix this, so I'm disabling it.
                 if (mApplicationId.equals("voice-search") ||
-                        (mApplicationId.equals("voice-ime") && !prefs.getBoolean("pref_voice_imei", true)) ||
+                        (mApplicationId.equals("voice-ime") && !prefs.getBoolean("pref_voice_ime", true)) ||
                         (isBlacklisted(mTriggerApplication)))
                     return;
                 param.args[2] = false;
