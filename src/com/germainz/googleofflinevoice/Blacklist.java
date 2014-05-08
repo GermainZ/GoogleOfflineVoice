@@ -1,219 +1,166 @@
-/*
- * Copyright (C) 2013 XuiMod
- * Based on source obtained from the ParanoidAndroid Project, Copyright (C) 2013
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 package com.germainz.googleofflinevoice;
 
+import android.app.ProgressDialog;
+import android.content.Context;
+import android.content.pm.ApplicationInfo;
+import android.content.pm.PackageManager;
+import android.graphics.drawable.Drawable;
+import android.os.AsyncTask;
+import android.os.Bundle;
+import android.preference.PreferenceActivity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.CompoundButton;
+import android.widget.ImageView;
+import android.widget.Switch;
+import android.widget.TextView;
+
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
-import com.germainz.googleofflinevoice.ApplicationsDialog.AppAdapter;
-import com.germainz.googleofflinevoice.ApplicationsDialog.AppItem;
-
-import android.graphics.drawable.Drawable;
-import android.os.Bundle;
-import android.preference.Preference;
-import android.preference.Preference.OnPreferenceClickListener;
-import android.preference.PreferenceActivity;
-import android.preference.PreferenceScreen;
-import android.annotation.SuppressLint;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.Context;
-import android.content.Intent;
-import android.content.SharedPreferences;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.View.OnClickListener;
-import android.view.Window;
-import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ListView;
-
-@SuppressLint("WorldReadableFiles")
 public class Blacklist extends PreferenceActivity {
-    // TODO : Rearrange + Cleanup code.
+    private static SettingsHelper mSettingsHelper;
+    private static BlacklistAdapter mAdapter;
 
-    public static Dialog dialog = null;
-    private static final int MENU_ADD = 0;
-    private static final int MENU_HELP = 1;
-    public static final String LISTVIEW_PREFERENCE_FILENAME = "listview_blacklist";
-
-    private PreferenceScreen mRoot;
-    private List<ResolveInfo> mInstalledApps;
-    private AppAdapter mAppAdapter;
-    private OnPreferenceClickListener mOnItemClickListener = new OnPreferenceClickListener(){
-        @Override
-        public boolean onPreferenceClick(Preference arg0) {
-            mRoot.removePreference(arg0);
-            savePreferenceItems(false);
-            invalidateOptionsMenu();
-            return false;
-        }
-    };
-
-    @SuppressWarnings("deprecation")
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        final Intent mainIntent = new Intent(Intent.ACTION_MAIN, null);
-        mainIntent.addCategory(Intent.CATEGORY_LAUNCHER);
-        mInstalledApps = this.getPackageManager().queryIntentActivities(mainIntent, 0);
-        ApplicationsDialog appDialog = new ApplicationsDialog();
-        mAppAdapter = appDialog.createAppAdapter(this, mInstalledApps);
-        mAppAdapter.update();
-        setPreferenceScreen(getPreferenceManager().createPreferenceScreen(this));
-        mRoot = getPreferenceScreen();
-        loadPreferenceItems();
+        mSettingsHelper = new SettingsHelper(this);
+
+        new LoadAppsInfoTask().execute();
+
+        getActionBar().setDisplayHomeAsUpEnabled(true);
+        getActionBar().setTitle(R.string.pref_blacklist_title);
     }
 
-
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(Menu.NONE, MENU_ADD, 0, R.string.add)
-                .setShowAsAction(MenuItem.SHOW_AS_ACTION_WITH_TEXT | MenuItem.SHOW_AS_ACTION_ALWAYS);
-
-        menu.add(Menu.NONE, MENU_HELP, 1, R.string.help)
-                .setShowAsAction(MenuItem.SHOW_AS_ACTION_WITH_TEXT | MenuItem.SHOW_AS_ACTION_ALWAYS);
-        return true;
+    private static class AppInfo {
+        String title;
+        String summary;
+        Drawable icon;
+        boolean enabled;
     }
 
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()) {
-            case MENU_HELP:
-                AlertDialog alertDialog = new AlertDialog.Builder(this).create();
-                alertDialog.setTitle(R.string.help);
-                alertDialog.setMessage(getString(R.string.anim_listview_blacklist_help_dialog));
-                alertDialog.show();
-                break;
-            case MENU_ADD:
+    private List<AppInfo> loadApps(ProgressDialog dialog) {
+        PackageManager packageManager = getPackageManager();
+        List<ApplicationInfo> packages = packageManager.getInstalledApplications(PackageManager.GET_META_DATA);
+        List<AppInfo> apps = new ArrayList<AppInfo>();
 
-                dialog = new Dialog(this);
-                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE);
-                dialog.setContentView(R.layout.pref_app_picker);
+        dialog.setMax(packages.size());
+        int i = 1;
 
-                final ListView list = (ListView) dialog.findViewById(R.id.listView1);
-                list.setAdapter(mAppAdapter);
-                list.setOnItemClickListener(new OnItemClickListener() {
-                    @Override
-                    public void onItemClick(AdapterView<?> v, View arg1, int pos, long arg3) {
-                        AppItem info = (AppItem) v.getItemAtPosition(pos);
-                        for(int i = 0; i < mRoot.getPreferenceCount(); i++){
-                            if(mRoot.getPreference(i).getSummary()
-                                    .equals(info.packageName)){
-                                return;
-                            }
-                        }
-                        Preference item = new Preference(getBaseContext());
-                        item.setTitle(info.title);
-                        item.setSummary(info.packageName);
-                        item.setIcon(info.icon);
-                        item.setOnPreferenceClickListener(mOnItemClickListener);
-                        mRoot.addPreference(item);
-                        savePreferenceItems(true);
-                        invalidateOptionsMenu();
-                        dialog.cancel();
-                    }
-                });
-
-                final Button searchButton = (Button) dialog.findViewById(R.id.searchButton);
-                final EditText inputSearch = (EditText) dialog.findViewById(R.id.search);
-                searchButton.setOnClickListener(new OnClickListener(){
-                    @Override
-                    public void onClick(View arg0) {
-                        dialog.findViewById(R.id.progress_bar).setVisibility(View.VISIBLE);
-                        mAppAdapter.getFilter().filter(inputSearch.getText().toString());
-                    }
-                });
-
-                dialog.show();
-                mAppAdapter.getFilter().filter("");
-                break;
+        for (ApplicationInfo app : packages) {
+            AppInfo appInfo = new AppInfo();
+            appInfo.title = (String) app.loadLabel(packageManager);
+            appInfo.summary = app.packageName;
+            appInfo.icon = app.loadIcon(packageManager);
+            appInfo.enabled = mSettingsHelper.isListed(app.packageName);
+            apps.add(appInfo);
+            dialog.setProgress(i++);
         }
-        return super.onOptionsItemSelected(item);
-    }
 
-    private void savePreferenceItems(boolean create){
-        ArrayList<String> items = new ArrayList<String>();
-        for(int i = 0; i < mRoot.getPreferenceCount(); i++){
-            String packageName = mRoot.getPreference(i)
-                    .getSummary().toString();
-            items.add(packageName);
-        }
-        saveArray(items.toArray(new String[items.size()]), "items", this);
-    }
-
-    private static boolean saveArray(String[] array, String arrayName, Context context) {
-        SharedPreferences prefs = context.getSharedPreferences(LISTVIEW_PREFERENCE_FILENAME, MODE_WORLD_READABLE);
-        SharedPreferences.Editor editor = prefs.edit();
-        editor.clear();
-        editor.putInt(arrayName +"_size", array.length);
-        for(int i = 0; i<array.length; i++) {
-            editor.putString(arrayName + "_" + i, array[i]);
-        }
-        return editor.commit();
-    }
-
-    private static String[] loadArray(String arrayName, Context context) {
-        SharedPreferences prefs = context.getSharedPreferences(LISTVIEW_PREFERENCE_FILENAME, MODE_WORLD_READABLE);
-        int size = prefs.getInt(arrayName + "_size", 0);
-        String[] array = null;
-        if(size != 0) {
-            array = new String[size];
-            for(int i = 0; i<size; i++){
-                array[i] = prefs.getString(arrayName + "_" + i, null);
+        Collections.sort(apps, new Comparator<AppInfo>() {
+            @Override
+            public int compare(AppInfo appInfo1, AppInfo appinfo2) {
+                return appInfo1.title.compareToIgnoreCase(appinfo2.title);
             }
-        }
-        return array;
+        });
+
+        return apps;
     }
 
-    private static Drawable getApplicationIconDrawable(String packageName, Context context){
-        Drawable appIcon = null;
-        try {
-            appIcon = context.getPackageManager().getApplicationIcon(packageName);
-        } catch (Exception e) {
+    private static class BlacklistAdapter extends ArrayAdapter<AppInfo> {
+        LayoutInflater mInflater;
+
+        public BlacklistAdapter(Context context, List<AppInfo> items) {
+            super(context, 0, items);
+            mInflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
-        return appIcon;
+
+        private static class Holder {
+            ImageView icon;
+            TextView title;
+            TextView summary;
+            Switch switch_;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            final Holder holder;
+            final AppInfo item = getItem(position);
+            View view;
+
+            if (convertView == null) {
+                holder = new Holder();
+                view = mInflater.inflate(R.layout.blacklist_item, parent, false);
+                holder.icon = (ImageView) view.findViewById(R.id.icon);
+                holder.title = (TextView) view.findViewById(android.R.id.title);
+                holder.summary = (TextView) view.findViewById(android.R.id.summary);
+                holder.switch_ = (Switch) view.findViewById(R.id.switch_);
+                view.setTag(holder);
+            } else {
+                view = convertView;
+                holder = (Holder) view.getTag();
+            }
+
+            holder.title.setText(item.title);
+            holder.summary.setText(item.summary);
+            holder.icon.setImageDrawable(item.icon);
+
+            holder.switch_.setOnCheckedChangeListener(null);
+            holder.switch_.setChecked(item.enabled);
+            holder.switch_.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+                @Override
+                public void onCheckedChanged(CompoundButton compoundButton, boolean isChecked) {
+                    item.enabled = isChecked;
+                    if (isChecked)
+                        mSettingsHelper.addListItem(item.summary);
+                    else
+                        mSettingsHelper.removeListItem(item.summary);
+                }
+            });
+
+            return view;
+        }
+
     }
 
-    private static String getApplicationName(String packageName, Context context){
-        try {
-            PackageManager pm = context.getPackageManager();
-            return (String) (pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0)));
-        } catch (final Exception e) {
+    private class LoadAppsInfoTask extends AsyncTask<Void, Void, Void> {
+        ProgressDialog dialog;
+
+        List<AppInfo> appInfos;
+
+        @Override
+        protected void onPreExecute() {
+            dialog = new ProgressDialog(Blacklist.this);
+            dialog.setMessage(getString(R.string.loading));
+            dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+            dialog.setCancelable(false);
+            dialog.show();
         }
-        return context.getString(R.string.unknown);
+
+        @Override
+        protected Void doInBackground(Void... params) {
+            appInfos = loadApps(dialog);
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(Void... progress) {
+            mAdapter.notifyDataSetChanged();
+        }
+
+        @Override
+        protected void onPostExecute(Void void_) {
+            super.onPostExecute(void_);
+            mAdapter = new BlacklistAdapter(Blacklist.this, appInfos);
+            setListAdapter(mAdapter);
+            dialog.dismiss();
+        }
+
     }
 
-    private void loadPreferenceItems(){
-        String[] packages = loadArray("items", this);
-        if(packages == null) return;
-        for(String packageName : packages){
-            Preference app = new Preference(this);
-            app.setTitle(getApplicationName(packageName, this));
-            app.setSummary(packageName);
-            app.setIcon(getApplicationIconDrawable(packageName, this));
-            app.setOnPreferenceClickListener(mOnItemClickListener);
-            mRoot.addPreference(app);
-        }
-    }
 }

@@ -9,15 +9,12 @@ import static de.robv.android.xposed.XposedHelpers.getObjectField;
 
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.XC_MethodHook;
-import de.robv.android.xposed.XSharedPreferences;
 import de.robv.android.xposed.callbacks.XC_LoadPackage.LoadPackageParam;
 
 public class OfflineVoice implements IXposedHookLoadPackage {
 
-    static XSharedPreferences prefs = new XSharedPreferences("com.germainz.googleofflinevoice");
-    public static final String LISTVIEW_PREFERENCE_FILENAME = "listview_blacklist";
-    static XSharedPreferences listviewPref = new XSharedPreferences("com.germainz.googleofflinevoice", LISTVIEW_PREFERENCE_FILENAME);
     private static final Map<String, EngineSelectorImpl> CLASS_ENGINE_SELECTOR_IMPL;
+    private static final SettingsHelper mSettingsHelper = new SettingsHelper();
 
     // Adapted from GravityBox's implementation, by C3C0
     // https://github.com/GravityBox/GravityBox/commit/8b6a926876360c5b8b92542029a4b8dda9fe6506
@@ -57,8 +54,8 @@ public class OfflineVoice implements IXposedHookLoadPackage {
             XC_MethodHook hook = new XC_MethodHook() {
                 @Override
                 protected void beforeHookedMethod(MethodHookParam param) throws Throwable {
-                    prefs.reload();
-                    if (prefs.getBoolean("pref_disabled", false))
+                    mSettingsHelper.reload();
+                    if (mSettingsHelper.isModDisabled())
                         return;
                     String mTriggerApplication = (String) getObjectField(param.args[0], engineSelectorImpl.mTriggerApplication);
                     String mApplicationId = (String) getObjectField(param.args[0], engineSelectorImpl.mApplicationId);
@@ -67,27 +64,15 @@ public class OfflineVoice implements IXposedHookLoadPackage {
                     // connect. The user can then press "Resend audio" and it'll work, which is a hassle.
                     // I couldn't figure out how fix this, so I'm disabling it.
                     if (mApplicationId.equals("voice-search") ||
-                            (mApplicationId.equals("voice-ime") && !prefs.getBoolean("pref_voice_ime", true)) ||
-                            (isBlacklisted(mTriggerApplication)))
+                            (mApplicationId.equals("voice-ime") && !mSettingsHelper.isVoiceTypingEnabled()) ||
+                            (mSettingsHelper.isListed(mTriggerApplication)))
                         return;
                     param.args[2] = false;
                 }
             };
+
             hookAllConstructors(engineSelectorImpl.clazz, hook);
         }
-    }
 
-    // Slightly modified from XuiMod by zst123
-    private static boolean isBlacklisted(String triggerPkg) {
-        listviewPref.reload();
-        int size = listviewPref.getInt("items" + "_size", 0);
-        if(size != 0) {
-            for(int i = 0; i < size; i++){
-                String pkg = listviewPref.getString("items" + "_" + i, "");
-                if(pkg.equals(triggerPkg))
-                    return true;
-            }
-        }
-        return false;
     }
 }
