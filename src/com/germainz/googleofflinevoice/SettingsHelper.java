@@ -33,10 +33,6 @@ public class SettingsHelper {
     }
 
     // The methods below are only called from the module's class (XSharedPreferences)
-    public boolean isModDisabled() {
-        return mXSharedPreferences.getBoolean(PREF_DISABLED, false);
-    }
-
     public boolean isVoiceTypingEnabled() {
         return mXSharedPreferences.getBoolean(PREF_VOICE_IME, true);
     }
@@ -62,7 +58,23 @@ public class SettingsHelper {
         prefEditor.apply();
     }
 
+    public void setModDisabled(boolean disabled) {
+        mSharedPreferences.edit().putBoolean(PREF_DISABLED, disabled).apply();
+    }
+
+    public void setVoiceTyping(boolean enabled) {
+        mSharedPreferences.edit().putBoolean(PREF_VOICE_IME, enabled).apply();
+    }
+
     // These methods can be called from both
+    public boolean isModDisabled() {
+        if (mSharedPreferences != null)
+            return mSharedPreferences.getBoolean(PREF_DISABLED, false);
+        else if (mXSharedPreferences != null)
+            return mXSharedPreferences.getBoolean(PREF_DISABLED, false);
+        return false;
+    }
+
     public boolean isListed(String s) {
         if (mListItems == null)
             mListItems = getListItems();

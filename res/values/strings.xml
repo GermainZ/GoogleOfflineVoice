@@ -12,5 +12,7 @@
     <string name="pref_voice_ime_title">Enable for voice typing</string>
     <string name="pref_voice_ime_summary">Keyboards use voice typing instead of voice recognition. The blacklist won\'t affect them. Use this setting instead.</string>
     <string name="loading">Loading…</string>
+    <string name="disabled">Disabled</string>
+    <string name="enabled">Enabled</string>
 
 </resources>

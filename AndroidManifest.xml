@@ -34,9 +34,19 @@
             <intent-filter>
                 <action android:name="com.germainz.googleofflinevoice.enable" />
                 <action android:name="com.germainz.googleofflinevoice.disable" />
+                <action android:name="com.germainz.googleofflinevoice.toggle" />
                 <action android:name="com.germainz.googleofflinevoice.enable_voice_ime" />
                 <action android:name="com.germainz.googleofflinevoice.disable_voice_ime" />
             </intent-filter>
+        </receiver>
+
+        <receiver android:name=".ToggleAppWidgetProvider">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/appwidget_info" />
         </receiver>
 
         <meta-data
