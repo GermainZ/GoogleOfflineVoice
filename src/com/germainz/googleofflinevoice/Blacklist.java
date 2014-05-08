@@ -130,7 +130,6 @@ public class Blacklist extends PreferenceActivity {
 
     private class LoadAppsInfoTask extends AsyncTask<Void, Void, Void> {
         ProgressDialog dialog;
-
         List<AppInfo> appInfos;
 
         @Override

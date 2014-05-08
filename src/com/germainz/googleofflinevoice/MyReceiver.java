@@ -10,16 +10,16 @@ public class MyReceiver extends BroadcastReceiver {
     public void onReceive(Context context, Intent intent) {
         SettingsHelper settingsHelper = new SettingsHelper(context);
         String action = intent.getAction();
-        if (action.equals("com.germainz.googleofflinevoice.enable_voice_ime"))
+        if (action.equals(Common.ACTION_ENABLE_IME))
             settingsHelper.setVoiceTyping(true);
-        else if (action.equals("com.germainz.googleofflinevoice.disable_voice_ime"))
+        else if (action.equals(Common.ACTION_DISABLE_IME))
             settingsHelper.setVoiceTyping(false);
         else {
-            if (action.equals("com.germainz.googleofflinevoice.enable"))
+            if (action.equals(Common.ACTION_ENABLE))
                 settingsHelper.setModDisabled(false);
-            else if (action.equals("com.germainz.googleofflinevoice.disable"))
+            else if (action.equals(Common.ACTION_DISABLE))
                 settingsHelper.setModDisabled(true);
-            else if (action.equals("com.germainz.googleofflinevoice.toggle"))
+            else if (action.equals(Common.ACTION_TOGGLE))
                 settingsHelper.setModDisabled(!settingsHelper.isModDisabled());
             new ToggleAppWidgetProvider().updateWidgets(context, settingsHelper.isModDisabled());
         }

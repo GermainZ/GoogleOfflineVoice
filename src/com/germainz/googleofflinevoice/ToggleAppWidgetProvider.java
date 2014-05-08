@@ -11,11 +11,10 @@ import android.widget.RemoteViews;
 public class ToggleAppWidgetProvider extends AppWidgetProvider {
 
     private static SettingsHelper mSettingsHelper;
-    private static final String ACTION_TOGGLE = "com.germainz.googleofflinevoice.toggle_widget";
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        if (intent.getAction().equals(ACTION_TOGGLE)) {
+        if (intent.getAction().equals(Common.ACTION_TOGGLE_WIDGET)) {
             boolean disabled = !mSettingsHelper.isModDisabled();
             mSettingsHelper.setModDisabled(disabled);
             updateWidgets(context, disabled);
@@ -32,7 +31,7 @@ public class ToggleAppWidgetProvider extends AppWidgetProvider {
             int appWidgetId = appWidgetIds[i];
 
             Intent intent = new Intent(context, ToggleAppWidgetProvider.class);
-            intent.setAction(ACTION_TOGGLE);
+            intent.setAction(Common.ACTION_TOGGLE_WIDGET);
             intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetIds[i]);
             PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
 

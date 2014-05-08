@@ -1,7 +1,6 @@
 package com.germainz.googleofflinevoice;
 
 import android.app.Activity;
-import android.appwidget.AppWidgetManager;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -28,7 +27,7 @@ public class Preferences extends Activity {
             getPreferenceManager().setSharedPreferencesMode(MODE_WORLD_READABLE);
             addPreferencesFromResource(R.xml.prefs);
 
-            Preference prefDisabled = findPreference("pref_disabled");
+            Preference prefDisabled = findPreference(Common.PREF_DISABLED);
             prefDisabled.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
                 @Override
                 public boolean onPreferenceChange(Preference preference, Object newValue) {
@@ -37,7 +36,7 @@ public class Preferences extends Activity {
                 }
             });
 
-            Preference prefShowAppIcon = findPreference("pref_show_app_icon");
+            Preference prefShowAppIcon = findPreference(Common.PREF_SHOW_APP_ICON);
             prefShowAppIcon.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
 
                 @Override
@@ -51,7 +50,7 @@ public class Preferences extends Activity {
                 }
             });
 
-            Preference prefBlacklist = findPreference("pref_blacklist");
+            Preference prefBlacklist = findPreference(Common.PREF_BLACKLIST);
             prefBlacklist.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener() {
                 @Override
                 public boolean onPreferenceClick(Preference arg0) {

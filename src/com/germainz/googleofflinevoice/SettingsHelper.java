@@ -14,27 +14,21 @@ public class SettingsHelper {
     private Context mContext = null;
     private Set<String> mListItems;
 
-    private static final String PACKAGE_NAME = "com.germainz.googleofflinevoice";
-    private static final String PREFS = PACKAGE_NAME + "_preferences";
-    private static final String PREF_DISABLED = "pref_disabled";
-    private static final String PREF_VOICE_IME = "pref_voice_ime";
-    private static final String BLACKLIST = "blacklist";
-
     // Called from module's classes.
     public SettingsHelper() {
-        mXSharedPreferences = new XSharedPreferences(PACKAGE_NAME, PREFS);
+        mXSharedPreferences = new XSharedPreferences(Common.PACKAGE_NAME, Common.PREFS);
         mXSharedPreferences.makeWorldReadable();
     }
 
     // Called from activities.
     public SettingsHelper(Context context) {
-        mSharedPreferences = context.getSharedPreferences(PREFS, Context.MODE_WORLD_READABLE);
+        mSharedPreferences = context.getSharedPreferences(Common.PREFS, Context.MODE_WORLD_READABLE);
         mContext = context;
     }
 
     // The methods below are only called from the module's class (XSharedPreferences)
     public boolean isVoiceTypingEnabled() {
-        return mXSharedPreferences.getBoolean(PREF_VOICE_IME, true);
+        return mXSharedPreferences.getBoolean(Common.PREF_VOICE_IME, true);
     }
 
     public void reload() {
@@ -46,7 +40,7 @@ public class SettingsHelper {
     public boolean addListItem(String listItem) {
         mListItems.add(listItem);
         SharedPreferences.Editor prefEditor = mSharedPreferences.edit();
-        prefEditor.putStringSet(BLACKLIST, mListItems);
+        prefEditor.putStringSet(Common.BLACKLIST, mListItems);
         prefEditor.apply();
         return true;
     }
@@ -54,24 +48,24 @@ public class SettingsHelper {
     public void removeListItem(String listItem) {
         SharedPreferences.Editor prefEditor = mSharedPreferences.edit();
         mListItems.remove(listItem);
-        prefEditor.putStringSet(BLACKLIST, mListItems);
+        prefEditor.putStringSet(Common.BLACKLIST, mListItems);
         prefEditor.apply();
     }
 
     public void setModDisabled(boolean disabled) {
-        mSharedPreferences.edit().putBoolean(PREF_DISABLED, disabled).apply();
+        mSharedPreferences.edit().putBoolean(Common.PREF_DISABLED, disabled).apply();
     }
 
     public void setVoiceTyping(boolean enabled) {
-        mSharedPreferences.edit().putBoolean(PREF_VOICE_IME, enabled).apply();
+        mSharedPreferences.edit().putBoolean(Common.PREF_VOICE_IME, enabled).apply();
     }
 
     // These methods can be called from both
     public boolean isModDisabled() {
         if (mSharedPreferences != null)
-            return mSharedPreferences.getBoolean(PREF_DISABLED, false);
+            return mSharedPreferences.getBoolean(Common.PREF_DISABLED, false);
         else if (mXSharedPreferences != null)
-            return mXSharedPreferences.getBoolean(PREF_DISABLED, false);
+            return mXSharedPreferences.getBoolean(Common.PREF_DISABLED, false);
         return false;
     }
 
@@ -84,9 +78,9 @@ public class SettingsHelper {
     public Set<String> getListItems() {
         Set<String> set = new HashSet<String>();
         if (mSharedPreferences != null)
-            return mSharedPreferences.getStringSet(BLACKLIST, set);
+            return mSharedPreferences.getStringSet(Common.BLACKLIST, set);
         else if (mXSharedPreferences != null)
-            return mXSharedPreferences.getStringSet(BLACKLIST, set);
+            return mXSharedPreferences.getStringSet(Common.BLACKLIST, set);
         return set;
     }
 }
