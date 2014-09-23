@@ -15,6 +15,8 @@ public class ToggleAppWidgetProvider extends AppWidgetProvider {
     @Override
     public void onReceive(Context context, Intent intent) {
         if (intent.getAction().equals(Common.ACTION_TOGGLE_WIDGET)) {
+            if (mSettingsHelper == null)
+                mSettingsHelper = new SettingsHelper(context);
             boolean disabled = !mSettingsHelper.isModDisabled();
             mSettingsHelper.setModDisabled(disabled);
             updateWidgets(context, disabled);
@@ -23,21 +25,19 @@ public class ToggleAppWidgetProvider extends AppWidgetProvider {
     }
 
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
-        mSettingsHelper = new SettingsHelper(context);
-        final int N = appWidgetIds.length;
+        if (mSettingsHelper == null)
+            mSettingsHelper = new SettingsHelper(context);
 
         // Perform this loop procedure for each App Widget that belongs to this provider
-        for (int i = 0; i < N; i++) {
-            int appWidgetId = appWidgetIds[i];
-
+        for (int appWidgetId : appWidgetIds) {
             Intent intent = new Intent(context, ToggleAppWidgetProvider.class);
             intent.setAction(Common.ACTION_TOGGLE_WIDGET);
-            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetIds[i]);
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
             PendingIntent pendingIntent = PendingIntent.getBroadcast(context, 0, intent, 0);
 
             RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.appwidget);
             boolean disabled = mSettingsHelper.isModDisabled();
-            views.setTextViewText(R.id.button, context.getString(disabled ? R.string.disabled : R.string.enabled));
+            views.setImageViewResource(R.id.icon, disabled ? R.drawable.widget_inactive : R.drawable.widget_active);
             views.setOnClickPendingIntent(R.id.layout, pendingIntent);
 
             appWidgetManager.updateAppWidget(appWidgetId, views);
@@ -49,7 +49,7 @@ public class ToggleAppWidgetProvider extends AppWidgetProvider {
         int[] appWidgetIds = appWidgetManager.getAppWidgetIds(new ComponentName(context, ToggleAppWidgetProvider.class));
         for (int appWidgetId : appWidgetIds) {
             RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.appwidget);
-            views.setTextViewText(R.id.button, context.getString(disabled ? R.string.disabled : R.string.enabled));
+            views.setImageViewResource(R.id.icon, disabled ? R.drawable.widget_inactive : R.drawable.widget_active);
             appWidgetManager.updateAppWidget(appWidgetId, views);
         }
     }
